@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Star, MapPin, Clock, Search } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { mockBabysitters } from "@/data/mockBabysitters";
 
 interface BabysitterProfile {
   id: string;
@@ -75,13 +77,43 @@ const SearchBabysitters = () => {
     }
   };
 
+  // Combine real and mock babysitters
+  const allBabysitters = [
+    ...babysitters.map(b => ({
+      id: b.user_id,
+      name: b.profiles?.name || "Nome não disponível",
+      city: b.profiles?.city || "Cidade não disponível",
+      age: b.age,
+      years_experience: b.years_experience,
+      description: b.description || "",
+      hourly_rate: b.hourly_rate,
+      average_rating: b.average_rating,
+      total_reviews: b.total_reviews,
+      avatar_initials: b.profiles?.name?.split(" ").map(n => n[0]).join("") || "?",
+      isMock: false,
+    })),
+    ...mockBabysitters.map(b => ({
+      id: b.id,
+      name: b.name,
+      city: b.city,
+      age: b.age,
+      years_experience: b.years_experience,
+      description: b.description,
+      hourly_rate: b.hourly_rate,
+      average_rating: b.average_rating,
+      total_reviews: b.total_reviews,
+      avatar_initials: b.avatar_initials,
+      isMock: true,
+    })),
+  ];
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
   };
 
-  const filteredBabysitters = babysitters.filter((b) =>
-    b.profiles?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.profiles?.city.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredBabysitters = allBabysitters.filter((b) =>
+    b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    b.city.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -137,58 +169,72 @@ const SearchBabysitters = () => {
             )}
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredBabysitters.map((babysitter) => (
-              <Card key={babysitter.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start gap-4">
-                    <Avatar className="w-16 h-16">
-                      <AvatarFallback className="text-xl bg-primary/10 text-primary">
-                        {babysitter.profiles?.name?.split(" ").map(n => n[0]).join("") || "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <CardTitle className="text-xl mb-1">
-                        {babysitter.profiles?.name}
-                      </CardTitle>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
-                        <MapPin className="w-4 h-4" />
-                        {babysitter.profiles?.city}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-semibold">{babysitter.average_rating.toFixed(1)}</span>
+          <>
+            {babysitters.length === 0 && (
+              <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  ℹ️ Mostrando babás de demonstração. Quando babás reais se cadastrarem, elas aparecerão aqui também!
+                </p>
+              </div>
+            )}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredBabysitters.map((babysitter) => (
+                <Card key={babysitter.id} className="hover:shadow-lg transition-shadow relative">
+                  {babysitter.isMock && (
+                    <Badge className="absolute top-4 right-4 z-10" variant="secondary">
+                      Demo
+                    </Badge>
+                  )}
+                  <CardHeader>
+                    <div className="flex items-start gap-4">
+                      <Avatar className="w-16 h-16">
+                        <AvatarFallback className="text-xl bg-primary/10 text-primary">
+                          {babysitter.avatar_initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <CardTitle className="text-xl mb-1">
+                          {babysitter.name}
+                        </CardTitle>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
+                          <MapPin className="w-4 h-4" />
+                          {babysitter.city}
                         </div>
-                        <span className="text-sm text-muted-foreground">
-                          ({babysitter.total_reviews} avaliações)
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
+                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                            <span className="font-semibold">{babysitter.average_rating.toFixed(1)}</span>
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            ({babysitter.total_reviews} avaliações)
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="mb-4 line-clamp-3">
-                    {babysitter.description}
-                  </CardDescription>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-primary font-semibold">
-                      R$ {babysitter.hourly_rate?.toFixed(2)}/hora
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription className="mb-4 line-clamp-3">
+                      {babysitter.description}
+                    </CardDescription>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-1 text-primary font-semibold">
+                        R$ {babysitter.hourly_rate.toFixed(2)}/hora
+                      </div>
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <Clock className="w-4 h-4" />
+                        {babysitter.years_experience} anos
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Clock className="w-4 h-4" />
-                      {babysitter.years_experience} anos
-                    </div>
-                  </div>
-                  <Button className="w-full mt-4" asChild>
-                    <Link to={`/babysitter/${babysitter.user_id}`}>
-                      Ver Perfil
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    <Button className="w-full" asChild>
+                      <Link to={`/babysitter/${babysitter.id}`}>
+                        Ver Perfil
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </>
         )}
       </main>
     </div>

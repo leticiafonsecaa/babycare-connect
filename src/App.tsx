@@ -11,6 +11,7 @@ import About from "./pages/About";
 import HowItWorks from "./pages/HowItWorks";
 import SearchBabysitters from "./pages/SearchBabysitters";
 import ProfileSetup from "./pages/ProfileSetup";
+import BabysitterProfile from "./pages/BabysitterProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/search" element={<SearchBabysitters />} />
           <Route path="/profile/setup" element={<ProfileSetup />} />
+          <Route path="/babysitter/:id" element={<BabysitterProfile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
